@@ -1,19 +1,19 @@
 import streamlit as st
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+import psycopg2
 from sqlalchemy import create_engine
 from queries.read_query import read_query
 from dataframes_operations.scatter_chart_mql_costs import main as generate_scatter_chart
 from dataframes_operations.line_plot_cummulative_mqls_and_costs import main as take_data_for_specific_campaign
 from dataframes_operations.bar_chart_of_mqls_per_campaign import main as bar_char_for_campaign
-
-DATABASE_URL = ""
-
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 # Initialize the connection
 @st.cache_resource
 def init_connection():
+    DATABASE_URL = os.getenv('DATALAYER_URL')
     engine = create_engine(DATABASE_URL)
     return engine
 
@@ -39,7 +39,7 @@ def main():
     scatter_plot = generate_scatter_chart(mql, ga_campaigns_costs)
     st.divider()
     campaign_for_graph = st.selectbox("Select Campaign ID", ga_campaigns_costs['campaign_id'].unique().tolist())
-    take_data_for_specific_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph, mql_value=150)
+    take_data_for_specific_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph, mql_value=1500)
     bar_char_for_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph)
     
     # # User selection for campaigns and MQL scores

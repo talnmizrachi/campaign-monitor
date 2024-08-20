@@ -3,3 +3,6 @@ pandas~=2.2.2
 seaborn~=0.13.2
 matplotlib~=3.9.2
 SQLAlchemy~=2.0.32
+python-dotenv~=1.0.1
+plotly~=5.23.0
+psycopg2
