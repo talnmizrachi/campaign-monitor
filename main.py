@@ -1,13 +1,16 @@
-import streamlit as st
-import pandas as pd
-import psycopg2
-from sqlalchemy import create_engine
-from queries.read_query import read_query
-from dataframes_operations.scatter_chart_mql_costs import main as generate_scatter_chart
-from dataframes_operations.line_plot_cummulative_mqls_and_costs import main as take_data_for_specific_campaign
-from dataframes_operations.bar_chart_of_mqls_per_campaign import main as bar_char_for_campaign
-from dotenv import load_dotenv
 import os
+
+import pandas as pd
+import streamlit as st
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from streamlit_plotly_events import plotly_events
+
+from dataframes_operations.bar_chart_of_mqls_per_campaign import main as bar_char_for_campaign
+from dataframes_operations.line_plot_cummulative_mqls_and_costs import main as take_data_for_specific_campaign
+from dataframes_operations.scatter_chart_mql_costs import main as generate_scatter_chart
+from queries.read_query import read_query
+
 load_dotenv()
 
 # Initialize the connection
@@ -42,6 +45,9 @@ def main():
     take_data_for_specific_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph, mql_value=750)
     bar_char_for_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph)
     
+
+    
+
     # # User selection for campaigns and MQL scores
     # campaign_options = ga_campaigns_costs['campaign_id'].head()
     # selected_campaigns = st.multiselect("Select Campaigns", campaign_options, default=campaign_options)

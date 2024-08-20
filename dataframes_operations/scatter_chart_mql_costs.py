@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
+from streamlit_plotly_events import plotly_events
 
 
 def get_total_cost_per_campaign(costs):
@@ -38,6 +39,7 @@ def generate_plot(data_for_plot):
         y='daily_campaign_cost',
         text='utm_campaign'  # This adds the labels to the points
     )
+    selected_points = plotly_events(fig, click_event=False, hover_event=False, select_event=True)
     
     fig.update_traces(textposition='top center')
     
@@ -55,8 +57,10 @@ def generate_plot(data_for_plot):
         line=dict(color='RoyalBlue', width=2)
     )
     
+    st.write(f"Click events:{selected_points}" )
     # Display the plot in Streamlit
     st.plotly_chart(fig)
+    return fig
 
 
 def main(mqls_df, costs_df):
