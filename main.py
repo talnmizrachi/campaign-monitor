@@ -4,11 +4,12 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from streamlit_plotly_events import plotly_events
 
-from dataframes_operations.bar_chart_of_mqls_per_campaign import main as bar_char_for_campaign
-from dataframes_operations.line_plot_cummulative_mqls_and_costs import main as take_data_for_specific_campaign
-from dataframes_operations.scatter_chart_mql_costs import main as generate_scatter_chart
+from dataframes_operations.single_campaign.bar_chart_of_mqls_per_campaign import main as bar_char_for_campaign
+from dataframes_operations.single_campaign.line_plot_cummulative_mqls_and_costs import main as take_data_for_specific_campaign
+
+from dataframes_operations.all_campaigns.scatter_chart_mql_costs import main as generate_scatter_chart
+from dataframes_operations.all_campaigns.relative_campaign_cohort import main as relative_campaign_cohort
 from queries.read_query import read_query
 
 load_dotenv()
@@ -25,11 +26,11 @@ def init_connection():
 @st.cache_data
 def get_data(_engine):
 
-    df = pd.read_sql(read_query("queries/mql_students.sql"), _engine)
+    mqls_ = pd.read_sql(read_query("queries/mql_students.sql"), _engine)
     ga_campaigns_costs = pd.read_sql(read_query("queries/google_ads_campaigns_costs.sql"), _engine)
     ga_campaigns_costs = ga_campaigns_costs[ga_campaigns_costs['daily_campaign_cost']>0].copy()
-    
-    return df, ga_campaigns_costs
+
+    return mqls_, ga_campaigns_costs
 
 
 # Streamlit app structure
@@ -38,12 +39,15 @@ def main():
     
     engine = init_connection()
     mql, ga_campaigns_costs = get_data(engine)
-    
-    scatter_plot = generate_scatter_chart(mql, ga_campaigns_costs)
-    st.divider()
-    campaign_for_graph = st.selectbox("Select Campaign ID", ga_campaigns_costs['campaign_id'].unique().tolist())
-    take_data_for_specific_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph, mql_value=750)
-    bar_char_for_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph)
+    _, campaigns_tab, single_tab = st.tabs(["Hello", "Campaigns level", "Single Campaign"])
+
+    with campaigns_tab:
+        scatter_plot = generate_scatter_chart(mql, ga_campaigns_costs)
+        relative_campaign_cohort(mql)
+    with single_tab:
+        campaign_for_graph = st.selectbox("Select Campaign ID", ga_campaigns_costs['campaign_id'].unique().tolist())
+        take_data_for_specific_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph, mql_value=3500)
+        bar_char_for_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph)
     
 
     

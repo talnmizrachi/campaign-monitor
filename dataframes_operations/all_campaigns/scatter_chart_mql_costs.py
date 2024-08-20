@@ -13,6 +13,7 @@ def get_total_cost_per_campaign(costs):
 
 
 def get_mqls_per_campaign(mqls):
+
     top_campaigns = mqls.groupby('utm_campaign', as_index=False)[['mql_1', 'mql_2', 'mql_3', 'mql_4', 'mql_5']].sum()
     top_campaigns['total_mqls'] = top_campaigns[['mql_1', 'mql_2', 'mql_3', 'mql_4', 'mql_5']].sum(axis=1)
     top_campaigns.sort_values('total_mqls', ascending=False)
@@ -22,12 +23,13 @@ def get_mqls_per_campaign(mqls):
 
 def merge_mqls_and_costs(top_mqls, total_costs):
     merged = top_mqls.merge(total_costs, left_on='utm_campaign', right_on='campaign_id')
+
     return merged[['utm_campaign', 'total_mqls', 'daily_campaign_cost']].copy()
 
 
 def generate_data_for_plot(mqls_df, costs_df):
-    total_costs_ = get_total_cost_per_campaign(costs_df)
     total_mqls_ = get_mqls_per_campaign(mqls_df)
+    total_costs_ = get_total_cost_per_campaign(costs_df)
     final_df = merge_mqls_and_costs(total_mqls_, total_costs_)
     return final_df
 
@@ -39,27 +41,29 @@ def generate_plot(data_for_plot):
         y='daily_campaign_cost',
         text='utm_campaign'  # This adds the labels to the points
     )
-    selected_points = plotly_events(fig, click_event=False, hover_event=False, select_event=True)
-    
     fig.update_traces(textposition='top center')
-    
+
+
     fig.add_shape(
         type='line',
         x0=data_for_plot['total_mqls'].max()/2, x1=data_for_plot['total_mqls'].max()/2,  # x position of the line
         y0=min(data_for_plot['daily_campaign_cost']), y1=max(data_for_plot['daily_campaign_cost']),  # vertical line spans entire y-axis
         line=dict(color='RoyalBlue', width=2)
     )
-    
+
     fig.add_shape(
         type='line',
         x0=min(data_for_plot['total_mqls']), x1=max(data_for_plot['total_mqls']),  # x position of the line
         y0=data_for_plot['daily_campaign_cost'].max()/2, y1=data_for_plot['daily_campaign_cost'].max()/2,  # vertical line spans entire y-axis
         line=dict(color='RoyalBlue', width=2)
     )
-    
-    st.write(f"Click events:{selected_points}" )
+    # selected_points = plotly_events(fig, click_event=False, hover_event=False, select_event=True)
+    #
+    # st.write(f"Click events:{selected_points}" )
     # Display the plot in Streamlit
     st.plotly_chart(fig)
+    st.divider()
+
     return fig
 
 

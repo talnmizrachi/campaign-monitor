@@ -14,7 +14,6 @@ SELECT
              and utm_campaign is not null
              and date_mql_entered is not null
         ORDER BY
-
             utm_campaign, creation_date desc)
 
 select utm_campaign
