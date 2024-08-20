@@ -21,7 +21,9 @@ def main(df, costs, campaign_id, mql_value=150):
     
     
     st.title(f'Cummulative MQLs and Costs for Campaign {campaign_id}')
-    st.subheader(f'Cummulative MQLs - {for_cummalative["cum_mqls"].max()}, expected value of {mql_value}$')
+    st.subheader(f'Cummulative MQLs - {int(for_cummalative["cum_mqls"].max())},'
+                 f'\nAvg. expected value of {mql_value}$\n'
+                 f'\nCummulative Costs - {int(for_cummalative["cum_daily_campaign_cost"].max()):,}$')
     
     for_cummalative['cum_mqls'] *= mql_value
     st.line_chart(for_cummalative[['cum_mqls', 'cum_daily_campaign_cost']], color=['#6495ED', '#8ACE00'])

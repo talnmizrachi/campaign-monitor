@@ -39,7 +39,7 @@ def main():
     scatter_plot = generate_scatter_chart(mql, ga_campaigns_costs)
     st.divider()
     campaign_for_graph = st.selectbox("Select Campaign ID", ga_campaigns_costs['campaign_id'].unique().tolist())
-    take_data_for_specific_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph, mql_value=1500)
+    take_data_for_specific_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph, mql_value=750)
     bar_char_for_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph)
     
     # # User selection for campaigns and MQL scores
