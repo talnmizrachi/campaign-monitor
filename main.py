@@ -63,7 +63,7 @@ def get_data(_engine):
 def mainly_main():
     engine = init_connection()
     mql, ga_campaigns_costs, campaigns_conversions_, _campaign_names_dict_ = get_data(engine)
-    _, campaigns_tab, single_tab = st.tabs(["Hello", "Campaigns level", "Single Campaign"])
+    _, campaigns_tab, single_tab, tables_tab = st.tabs(["Hello", "Campaigns level", "Single Campaign","Raw Tables"])
 
     with campaigns_tab:
         st.subheader("Campaign level analysis")
@@ -76,6 +76,14 @@ def mainly_main():
         campaign_for_graph = st.selectbox("Select Campaign ID", ga_campaigns_costs['campaign_id'].unique().tolist())
         take_data_for_specific_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph, mql_value=1500)
         bar_char_for_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph)
+    with tables_tab:
+        with st.expander("MQL Table"):
+            st.dataframe(mql)
+        with st.expander("Google Ads Campaigns Costs Table"):
+            st.dataframe(ga_campaigns_costs)
+
+        with st.expander("Campaigns Conversions Table"):
+            st.dataframe(campaigns_conversions_)
 
 
 # Streamlit app structure
