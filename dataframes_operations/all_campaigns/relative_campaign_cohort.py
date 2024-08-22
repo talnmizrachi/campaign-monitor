@@ -20,18 +20,18 @@ def create_base_for_pivot(mql, selection='week'):
     return interim_mql
 
 
-def main(mql_df, n_campaigns=50, relative=False):
+def main(mql_df):
     all_mqls = ["mql_1", "mql_2", "mql_3", "mql_4", "mql_5"]
 
     mql_selection = st.multiselect("Select MQL Scores", all_mqls, default=all_mqls[0:3])
     col1, col2 = st.columns(2)
 
     with col1:
-        cadance_selection = st.radio("What is the cadance?", ["Day", "Week", "Month", 'Quarter'])
+        cadance_selection = st.radio("What is the cadence?", ["Day", "Week", "Month", 'Quarter'], index=2)
     with col2:
         criteria2 = st.radio("Should it be relative?", ["Yes", "No"])
         relative = criteria2 == "Yes"
-
+        number_of_campaigns = st.number_input("Number of Campaigns to Display",value=7, min_value=5, max_value=25)
 
     temping = create_base_for_pivot(mql_df, selection=cadance_selection.lower())
     if relative:
@@ -47,7 +47,7 @@ def main(mql_df, n_campaigns=50, relative=False):
     pivoted['total'] = pivoted.sum(axis=1)
 
     # st.write(pivoted.head(n_campaigns))
-    pivoted = pivoted.sort_values('total', ascending=False).head(n_campaigns)
+    pivoted = pivoted.sort_values('total', ascending=False).head(number_of_campaigns)
     pivoted = pivoted.drop('total', axis=1)
     fig, ax = plt.subplots(figsize=(16, 10))
     ax = sns.heatmap(pivoted, annot=True, cmap='Greens', cbar=False)
