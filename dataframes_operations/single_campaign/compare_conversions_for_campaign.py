@@ -116,7 +116,7 @@ def main(data):
     preprocessed_data = preprocess_data(data_)
     campaigns_dictionaries, _all_campaigns = pivot_data_to_cohorts(preprocessed_data)
 
-    campaign_to_check = st.text_input("Choose a campaign to compare:", value="")
+    campaign_to_check = st.text_input("Choose a campaign to compare:", value="21591593475")
     
     top_similar, similarities, old_campaigns = compute_similarities(campaign_to_check, campaigns_dictionaries,
                                                                     num_of_campaigns=3)
