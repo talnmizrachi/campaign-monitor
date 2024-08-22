@@ -92,19 +92,15 @@ def compute_similarities(new_campaign, all_campaigns, num_of_campaigns=3):
 
 def plot_campaign_conversions(new_campaign_id, all_campaigns, old_campaigns, top_similar_campaigns, similarities):
     len_of_new_campaign = len(all_campaigns[new_campaign_id])
-    for campaign_name, old_campaign in old_campaigns.items():
-        if campaign_name not in [x[0] for x in top_similar_campaigns]:
-            continue
 
+    for campaign_name, similarity_score in top_similar_campaigns:
         fig, ax = plt.subplots(figsize=(16, 6))
-        ax.plot(old_campaigns[campaign_name][0:len_of_new_campaign * 2], label=campaign_name, marker='o', alpha=0.7,lw=8)
+        ax.plot(all_campaigns[campaign_name][0:len_of_new_campaign * 2], label=campaign_name, marker='o', alpha=0.7,lw=8)
         ax.plot(all_campaigns[new_campaign_id], label="New Campaign", marker='o', alpha=0.5, lw=3)
         ax.set_ylim(bottom=0)  # Adjust the bottom to start at 0
-        ax.set_yticks(range(0, max(all_campaigns[new_campaign_id])*3))
-        ax.set_xticks(range(0, len(all_campaigns[new_campaign_id]) + 3))
-        
+
         ax.legend()
-        st.subheader(f'Cosine Similarity Comparison: {campaign_name} vs New Campaign ({100 * similarities[campaign_name]:.1f}%)')
+        st.subheader(f'Cosine Similarity Comparison: {campaign_name} vs New Campaign ({100 * similarity_score:.1f}%)')
         ax.set_xlabel('Time')
         ax.set_ylabel('Conversions')
         

@@ -1,6 +1,6 @@
 import hashlib
 import os
-
+from general_objects.dictionaries_fe_be import get_be_criteria_for_campaign
 import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
@@ -45,10 +45,12 @@ def get_data(_engine):
 
     campaigns_conversions = pd.read_sql(read_query("queries/conversions_for_single_campaigns.sql"), _engine)
     mqls_ = pd.read_sql(read_query("queries/mql_students.sql"), _engine)
+    # st.write(mqls_.head(1))
     ga_campaigns_costs = pd.read_sql(read_query("queries/google_ads_campaigns_costs.sql"), _engine)
     ga_campaigns_costs = ga_campaigns_costs[ga_campaigns_costs['daily_campaign_cost']>0].copy()
 
     return mqls_, ga_campaigns_costs, campaigns_conversions
+
 
 def mainly_main():
     engine = init_connection()
@@ -56,7 +58,11 @@ def mainly_main():
     _, campaigns_tab, single_tab = st.tabs(["Hello", "Campaigns level", "Single Campaign"])
 
     with campaigns_tab:
-        scatter_plot = generate_scatter_chart(mql, ga_campaigns_costs)
+        st.subheader("Campaign level analysis")
+
+        criteria = get_be_criteria_for_campaign(st.radio("Select Criteria", ["TypeForm Sent", "MQL", "SQL", "BG Enrolled"]))
+        scatter_plot = generate_scatter_chart(mql, ga_campaigns_costs, criteria=criteria)
+
         relative_campaign_cohort(mql)
     with single_tab:
         line_plot_comparing(campaigns_conversions_)
