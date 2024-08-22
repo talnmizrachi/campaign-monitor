@@ -39,22 +39,30 @@ def init_connection():
     return engine
 
 
+def read_and_preprocess_campaign_costs(_engine):
+    ga_campaigns_costs_ = pd.read_sql(read_query("queries/google_ads_campaigns_costs.sql"), _engine)
+    ga_campaigns_costs_ = ga_campaigns_costs_[ga_campaigns_costs_['daily_campaign_cost'] > 0].copy()
+
+    ga_campaigns_costs = ga_campaigns_costs_[['campaign_id', 'segments_date', 'daily_campaign_cost']].copy()
+    campaign_names_dict_ = (ga_campaigns_costs_[['campaign_id', 'campaign_name']].
+                           drop_duplicates()
+                           .set_index('campaign_id').to_dict()['campaign_name'])
+
+    return ga_campaigns_costs, campaign_names_dict_
+
 # Function to run the query and get the data
 @st.cache_data
 def get_data(_engine):
-
+    ga_campaigns_costs, campaign_names_dict = read_and_preprocess_campaign_costs(_engine)
     campaigns_conversions = pd.read_sql(read_query("queries/conversions_for_single_campaigns.sql"), _engine)
     mqls_ = pd.read_sql(read_query("queries/mql_students.sql"), _engine)
-    # st.write(mqls_.head(1))
-    ga_campaigns_costs = pd.read_sql(read_query("queries/google_ads_campaigns_costs.sql"), _engine)
-    ga_campaigns_costs = ga_campaigns_costs[ga_campaigns_costs['daily_campaign_cost']>0].copy()
 
-    return mqls_, ga_campaigns_costs, campaigns_conversions
+    return mqls_, ga_campaigns_costs, campaigns_conversions, campaign_names_dict
 
 
 def mainly_main():
     engine = init_connection()
-    mql, ga_campaigns_costs, campaigns_conversions_ = get_data(engine)
+    mql, ga_campaigns_costs, campaigns_conversions_, _campaign_names_dict_ = get_data(engine)
     _, campaigns_tab, single_tab = st.tabs(["Hello", "Campaigns level", "Single Campaign"])
 
     with campaigns_tab:
@@ -62,10 +70,9 @@ def mainly_main():
 
         criteria = get_be_criteria_for_campaign(st.radio("Select Criteria", ["TypeForm Sent", "MQL", "SQL", "BG Enrolled"]))
         scatter_plot = generate_scatter_chart(mql, ga_campaigns_costs, criteria=criteria)
-
         relative_campaign_cohort(mql)
     with single_tab:
-        line_plot_comparing(campaigns_conversions_)
+        line_plot_comparing(campaigns_conversions_, _campaign_names_dict_)
         campaign_for_graph = st.selectbox("Select Campaign ID", ga_campaigns_costs['campaign_id'].unique().tolist())
         take_data_for_specific_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph, mql_value=1500)
         bar_char_for_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph)
