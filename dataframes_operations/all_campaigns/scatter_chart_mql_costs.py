@@ -35,13 +35,25 @@ def generate_data_for_plot(mqls_df, costs_df):
 
 
 def generate_plot(data_for_plot):
+    data_for_plot['cost_per_mql'] = data_for_plot['daily_campaign_cost'] / data_for_plot['total_mqls']
+
     fig = px.scatter(
         data_for_plot,
         x='total_mqls',
         y='daily_campaign_cost',
         text='utm_campaign'  # This adds the labels to the points
     )
-    fig.update_traces(textposition='top center')
+
+    fig.update_traces(
+        textposition='top center',
+        hovertemplate=(
+                '<b>Campaign:</b> %{text}<br>' +
+                '<b>Total MQLs:</b> %{x}<br>' +
+                '<b>Daily Campaign Cost:</b> %{y}<br>' +
+                '<b>Cost per MQL:</b> %{customdata[0]:.2f}<extra></extra>'
+        ),
+        customdata=data_for_plot[['cost_per_mql']]  # Pass the ratio to the hover template
+    )
 
 
     fig.add_shape(

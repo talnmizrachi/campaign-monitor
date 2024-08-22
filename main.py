@@ -50,6 +50,20 @@ def get_data(_engine):
 
     return mqls_, ga_campaigns_costs, campaigns_conversions
 
+def mainly_main():
+    engine = init_connection()
+    mql, ga_campaigns_costs, campaigns_conversions_ = get_data(engine)
+    _, campaigns_tab, single_tab = st.tabs(["Hello", "Campaigns level", "Single Campaign"])
+
+    with campaigns_tab:
+        scatter_plot = generate_scatter_chart(mql, ga_campaigns_costs)
+        relative_campaign_cohort(mql)
+    with single_tab:
+        line_plot_comparing(campaigns_conversions_)
+        campaign_for_graph = st.selectbox("Select Campaign ID", ga_campaigns_costs['campaign_id'].unique().tolist())
+        take_data_for_specific_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph, mql_value=1500)
+        bar_char_for_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph)
+
 
 # Streamlit app structure
 def main():
@@ -70,20 +84,7 @@ def main():
                 st.error("Incorrect username or password")
     else:
         st.title("Campaign and MQL Score Analysis")
-
-        engine = init_connection()
-        mql, ga_campaigns_costs, campaigns_conversions_ = get_data(engine)
-        _, campaigns_tab, single_tab = st.tabs(["Hello", "Campaigns level", "Single Campaign"])
-
-        with campaigns_tab:
-            scatter_plot = generate_scatter_chart(mql, ga_campaigns_costs)
-            relative_campaign_cohort(mql)
-        with single_tab:
-            line_plot_comparing(campaigns_conversions_)
-            campaign_for_graph = st.selectbox("Select Campaign ID", ga_campaigns_costs['campaign_id'].unique().tolist())
-            take_data_for_specific_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph, mql_value=1500)
-            bar_char_for_campaign(mql, ga_campaigns_costs, campaign_id=campaign_for_graph)
-
+        mainly_main()
 
         if st.button("Log out"):
             st.session_state["authenticated"] = False
