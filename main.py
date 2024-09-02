@@ -19,7 +19,8 @@ load_dotenv("auth.env")
 
 USER_CREDENTIALS = {
     os.getenv("USER1_USERNAME"): hashlib.sha256(os.getenv("USER1_PASSWORD").encode()).hexdigest(),
-    os.getenv("USER2_USERNAME"): hashlib.sha256(os.getenv("USER2_PASSWORD").encode()).hexdigest()
+    os.getenv("USER2_USERNAME"): hashlib.sha256(os.getenv("USER2_PASSWORD").encode()).hexdigest(),
+    os.getenv("USER3_USERNAME"): hashlib.sha256(os.getenv("USER3_PASSWORD").encode()).hexdigest()
     # Add more users as needed
 }
 
