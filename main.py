@@ -5,6 +5,7 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
+import socket
 
 from dataframes_operations.single_campaign.bar_chart_of_mqls_per_campaign import main as bar_char_for_campaign
 from dataframes_operations.single_campaign.line_plot_cummulative_mqls_and_costs import main as take_data_for_specific_campaign
@@ -17,18 +18,22 @@ from queries.read_query import read_query
 load_dotenv()
 load_dotenv("auth.env")
 
-USER_CREDENTIALS = {
-    os.getenv("USER1_USERNAME"): hashlib.sha256(os.getenv("USER1_PASSWORD").encode()).hexdigest(),
-    os.getenv("USER2_USERNAME"): hashlib.sha256(os.getenv("USER2_PASSWORD").encode()).hexdigest(),
-    os.getenv("USER3_USERNAME"): hashlib.sha256(os.getenv("USER3_PASSWORD").encode()).hexdigest()
-    # Add more users as needed
-}
+def get_user_credentials():
+    USER_CREDENTIALS = {
+        os.getenv("USER1_USERNAME"): hashlib.sha256(os.getenv("USER1_PASSWORD").encode()).hexdigest(),
+        os.getenv("USER2_USERNAME"): hashlib.sha256(os.getenv("USER2_PASSWORD").encode()).hexdigest(),
+        os.getenv("USER3_USERNAME"): hashlib.sha256(os.getenv("USER3_PASSWORD").encode()).hexdigest()
+        # Add more users as needed
+    }
+    
+    return USER_CREDENTIALS
 
 
 def check_password(username, password):
     """Check if the entered username and password match any stored credentials."""
-    if username in USER_CREDENTIALS:
-        return hashlib.sha256(password.encode()).hexdigest() == USER_CREDENTIALS[username]
+    user_credentials = get_user_credentials()
+    if username in user_credentials:
+        return hashlib.sha256(password.encode()).hexdigest() == user_credentials[username]
     return False
 
 
@@ -87,17 +92,26 @@ def mainly_main():
             st.dataframe(campaigns_conversions_)
 
 
-# Streamlit app structure
+def is_running_locally():
+    # Check if the app is running locally (localhost)
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+    return local_ip == "127.0.0.1" or local_ip.startswith("192.168.")
+
+
 def main():
+    if is_running_locally():
+        st.session_state["authenticated"] = True
+    
     if "authenticated" not in st.session_state:
         st.session_state["authenticated"] = False
-
+    
     if not st.session_state["authenticated"]:
         st.write("Please log in to access this app.")
-
+        
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
-
+        
         if st.button("Log in"):
             if check_password(username, password):
                 st.session_state["authenticated"] = True
@@ -107,7 +121,7 @@ def main():
     else:
         st.title("Campaign and MQL Score Analysis")
         mainly_main()
-
+        
         if st.button("Log out"):
             st.session_state["authenticated"] = False
 
