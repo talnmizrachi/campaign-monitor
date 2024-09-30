@@ -37,7 +37,7 @@ def main(mql_df):
     if relative:
         temping['cohort_time'] = temping[['utm_campaign']].groupby('utm_campaign', as_index=False).cumcount()
     else:
-        temping['cohort_time']= temping['cohort_skip']
+        temping['cohort_time'] = temping['cohort_skip']
 
     st.write("### Heatmap of Total MQL Scores by Campaign")
 

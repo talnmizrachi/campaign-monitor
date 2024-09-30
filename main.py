@@ -62,14 +62,16 @@ def get_data(_engine):
     ga_campaigns_costs, campaign_names_dict = read_and_preprocess_campaign_costs(_engine)
     campaigns_conversions = pd.read_sql(read_query("queries/conversions_for_single_campaigns.sql"), _engine)
     mqls_ = pd.read_sql(read_query("queries/mql_students.sql"), _engine)
-
-    return mqls_, ga_campaigns_costs, campaigns_conversions, campaign_names_dict
+    
+    conversion_funnel_by_campaign_and_ad = pd.read_sql(read_query("queries/conversion_funnel_by_campaign_and_ad.sql"), _engine)
+    
+    return mqls_, ga_campaigns_costs, campaigns_conversions, campaign_names_dict, conversion_funnel_by_campaign_and_ad
 
 
 def mainly_main():
     engine = init_connection()
-    mql, ga_campaigns_costs, campaigns_conversions_, _campaign_names_dict_ = get_data(engine)
-    _, campaigns_tab, single_tab, tables_tab = st.tabs(["Hello", "Campaigns level", "Single Campaign","Raw Tables"])
+    mql, ga_campaigns_costs, campaigns_conversions_, _campaign_names_dict_, conversion_funnel_by_campaign_and_ad = get_data(engine)
+    _, campaigns_tab, single_tab, funnel_view, tables_tab = st.tabs(["Hello", "Campaigns level", "Single Campaign","Funnel View", "Raw Tables"])
 
     with campaigns_tab:
         st.subheader("Campaign level analysis")
@@ -77,6 +79,15 @@ def mainly_main():
         criteria = get_be_criteria_for_campaign(st.radio("Select Criteria", ["TypeForm Sent", "MQL", "SQL", "BG Enrolled"]))
         scatter_plot = generate_scatter_chart(mql, ga_campaigns_costs, criteria=criteria)
         relative_campaign_cohort(mql)
+    with funnel_view:
+        st.subheader("Funnel View")
+        first_table = ['campaign_id', 'ad_id', 'typeforms_count', "mql_count", "sql_counts", "bg_enrolled"]
+        second_table = ['campaign_id', 'ad_id', 'mql_from_typeform_rate', "sql_from_mql_rate", "bg_enrolled_from_mql_rate", "funnel_conversion_rate"]
+        
+        
+        st.dataframe(conversion_funnel_by_campaign_and_ad[first_table])
+        
+        st.dataframe(conversion_funnel_by_campaign_and_ad[second_table])
     with single_tab:
         line_plot_comparing(campaigns_conversions_, _campaign_names_dict_)
         campaign_for_graph = st.selectbox("Select Campaign ID", ga_campaigns_costs['campaign_id'].unique().tolist())
