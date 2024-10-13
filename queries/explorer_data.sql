@@ -1,4 +1,3 @@
-
 with total_spends as (
 select 'Google' as platform, campaign_id, adgroupad_ad_id ad_id, date(segments_date) date_of_reference ,sum(metrics_clicks) as clicks,  sum(metrics_costmicros)/1000000 total_spend
 from google_ads_ad_performance_by_day
@@ -41,7 +40,10 @@ from marketing_mql_students
 where date_submitted_typeform_entered>'2024-01-01')
 
 
-select platform, campaign_id, ad_id, date_of_reference, sum(clicks) ad_clicks, sum(total_spend) ad_spend
+select platform, campaign_id, ad_id, date_of_reference,
+           to_char(date_of_reference, 'IYYY-IW') AS year_week,
+    to_char(date_of_reference, 'YYYY-MM') AS year_month
+       ,sum(clicks) ad_clicks, sum(total_spend) ad_spend
 ,sum(is_typeform) typeforms_count
 ,sum(is_mql) mql_count
 ,sum(is_sql) sql_counts
