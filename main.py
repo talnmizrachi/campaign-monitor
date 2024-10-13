@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 import socket
 
+from pygwalker.api.streamlit import StreamlitRenderer
+
+
 from dataframes_operations.single_campaign.bar_chart_of_mqls_per_campaign import main as bar_char_for_campaign
 from dataframes_operations.single_campaign.line_plot_cummulative_mqls_and_costs import main as take_data_for_specific_campaign
 from dataframes_operations.single_campaign.compare_conversions_for_campaign import main as line_plot_comparing
@@ -64,14 +67,18 @@ def get_data(_engine):
     mqls_ = pd.read_sql(read_query("queries/mql_students.sql"), _engine)
     
     conversion_funnel_by_campaign_and_ad = pd.read_sql(read_query("queries/conversion_funnel_by_campaign_and_ad.sql"), _engine)
-    
-    return mqls_, ga_campaigns_costs, campaigns_conversions, campaign_names_dict, conversion_funnel_by_campaign_and_ad
+    explorer_data = pd.read_sql(read_query("queries/explorer_data.sql"), _engine)
+    return mqls_, ga_campaigns_costs, campaigns_conversions, campaign_names_dict, conversion_funnel_by_campaign_and_ad, explorer_data
+
+@st.cache_resource
+def get_explorer_renderer(this_df):
+    return StreamlitRenderer(this_df)
 
 
 def mainly_main():
     engine = init_connection()
-    mql, ga_campaigns_costs, campaigns_conversions_, _campaign_names_dict_, conversion_funnel_by_campaign_and_ad = get_data(engine)
-    _, campaigns_tab, single_tab, funnel_view, tables_tab = st.tabs(["Hello", "Campaigns level", "Single Campaign","Funnel View", "Raw Tables"])
+    mql, ga_campaigns_costs, campaigns_conversions_, _campaign_names_dict_, conversion_funnel_by_campaign_and_ad, explorer_data_ = get_data(engine)
+    _, campaigns_tab, single_tab, funnel_view, explore_tab, tables_tab = st.tabs(["Hello", "Campaigns level", "Single Campaign","Funnel View", "Explorer", "Raw Tables"])
 
     with campaigns_tab:
         st.subheader("Campaign level analysis")
@@ -82,7 +89,7 @@ def mainly_main():
     with funnel_view:
         st.subheader("Funnel View")
         first_table = ['platform','campaign_id', 'ad_id', "ad_clicks", "ad_spend", 'typeforms_count', "mql_count", "sql_counts", "bg_enrolled"]
-        second_table = ['platform','campaign_id', 'ad_id', "ad_clicks", "ad_spend", 'mql_from_typeform_rate', "sql_from_mql_rate", "bg_enrolled_from_mql_rate", "funnel_conversion_rate"]
+        second_table = ['platform','campaign_id', 'ad_id', 'typeform_from_clicks_rate', 'mql_from_typeform_rate', "sql_from_mql_rate", "bg_enrolled_from_mql_rate", "funnel_conversion_rate"]
         
         st.dataframe(conversion_funnel_by_campaign_and_ad[first_table])
         st.dataframe(conversion_funnel_by_campaign_and_ad[second_table])
@@ -99,6 +106,11 @@ def mainly_main():
 
         with st.expander("Campaigns Conversions Table"):
             st.dataframe(campaigns_conversions_)
+
+    with explore_tab:
+        st.subheader("Explore raw data")
+        renderer = get_explorer_renderer(explorer_data_)
+        renderer.explorer()
 
 
 def is_running_locally():
