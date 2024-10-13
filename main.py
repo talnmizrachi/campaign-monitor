@@ -88,7 +88,7 @@ def mainly_main():
         relative_campaign_cohort(mql)
     with funnel_view:
         st.subheader("Funnel View")
-        first_table = ['platform','campaign_id', 'ad_id', "ad_clicks", "ad_spend", 'typeforms_count', "mql_count", "sql_counts", "bg_enrolled"]
+        first_table = ['platform','campaign_id', 'ad_id', "clicks", "total_spend", 'typeforms', "mqls", "sqls", "bgs"]
         second_table = ['platform','campaign_id', 'ad_id', 'typeform_from_clicks_rate', 'mql_from_typeform_rate', "sql_from_mql_rate", "bg_enrolled_from_mql_rate", "funnel_conversion_rate"]
         
         st.dataframe(conversion_funnel_by_campaign_and_ad[first_table])

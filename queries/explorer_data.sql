@@ -1,3 +1,4 @@
+
 with total_spends as (
 select 'Google' as platform, campaign_id, adgroupad_ad_id ad_id, date(segments_date) date_of_reference ,sum(metrics_clicks) as clicks,  sum(metrics_costmicros)/1000000 total_spend
 from google_ads_ad_performance_by_day
@@ -12,48 +13,54 @@ from  tiktok_auction_ads_basic_daily
 join tiktok_ads
 on tiktok_ads.ad_id = tiktok_auction_ads_basic_daily.dimensions_ad_id
 group by campaign_id, ad_id,  dimensions_stat_time_day),
-
-    student_data as (
-select utm_campaign campaign_id, utm_content ad_id, domain, plan_duration, count(hubspot_id) total_students
+typeforms as (
+select utm_campaign, utm_content, date(date_submitted_typeform_entered) date, count(*) typeforms
 from marketing_mql_students
-join bg_students
-using (hubspot_id)
-group by utm_campaign,utm_content , lp_variant, domain, plan_duration),
-
-    all_campaigns_data as (
-    select platform, date_of_reference, campaign_id, ad_id, sum(clicks) as clicks, sum(total_spend)::int total_spend
-from student_data
-join total_spends
-using (campaign_id, ad_id)
-group by platform, date_of_reference, campaign_id, ad_id
-),
-
-    raw_stages as (
-select
-    utm_campaign as campaign_id
-    ,utm_content as ad_id
-       , case when date_submitted_typeform_entered is not null then 1 else 0 end is_typeform
-       , case when date_mql_entered is not null then 1 else 0 end is_mql
-       , case when date_sql_entered is not null then 1 else 0 end is_sql
-       , case when date_bg_enrolled_entered is not null then 1 else 0 end is_bg_enrolled
+where date_submitted_typeform_entered is not null
+group by utm_campaign, utm_content, date_submitted_typeform_entered),
+     mqls as (
+select utm_campaign, utm_content, date(date_mql_entered) date, count(*) mqls
 from marketing_mql_students
-where date_submitted_typeform_entered>'2024-01-01')
+where date_mql_entered is not null
+group by utm_campaign, utm_content, date_mql_entered),
+    sqls as (
+select utm_campaign, utm_content, date(date_sql_entered) date, count(*) sqls
+from marketing_mql_students
+where date_sql_entered is not null
+group by utm_campaign, utm_content, date_sql_entered),
+    bgs as (
+select utm_campaign, utm_content, date(date_bg_enrolled_entered) date, count(*) bgs
+from marketing_mql_students
+where date_bg_enrolled_entered is not null
+group by utm_campaign, utm_content, date_bg_enrolled_entered),
+    students_dates as (
+        select utm_campaign campaign_id, utm_content ad_id, date date_of_reference, typeforms, mqls, sqls, bgs
+            from typeforms
+            full outer join mqls
+            using (utm_campaign, utm_content, date)
+            full outer join sqls
+            using (utm_campaign, utm_content, date)
+            full outer join bgs
+            using (utm_campaign, utm_content, date)
+    )
 
-
-select platform, campaign_id, ad_id, date_of_reference,
-           to_char(date_of_reference, 'IYYY-IW') AS year_week,
-    to_char(date_of_reference, 'YYYY-MM') AS year_month
-       ,sum(clicks) ad_clicks, sum(total_spend) ad_spend
-,sum(is_typeform) typeforms_count
-,sum(is_mql) mql_count
-,sum(is_sql) sql_counts
-,sum(is_bg_enrolled) bg_enrolled
-, case when sum(clicks) = 0 then 0 else sum(is_typeform::float)  / sum(clicks) end typeform_from_clicks_rate
-     , case when sum(is_typeform) = 0 then 0 else sum(is_mql::float)  / sum(is_typeform) end mql_from_typeform_rate
-     , case when sum(is_mql) = 0 then 0 else sum(is_sql::float) / sum(is_mql)  end sql_from_mql_rate
-    , case when sum(is_sql) = 0 then 0 else sum(is_bg_enrolled::float) /sum(is_sql)  end bg_enrolled_from_mql_rate
-    , sum(is_bg_enrolled::float) / sum(is_typeform) funnel_conversion_rate
-from raw_stages
-join all_campaigns_data
-using (campaign_id, ad_id)
-group by platform, campaign_id, ad_id,date_of_reference
+select platform
+       , campaign_id
+     , ad_id
+     , date_of_reference
+     , to_char(date_of_reference, 'IYYY-IW') AS year_week
+     , to_char(date_of_reference, 'YYYY-MM') AS year_month
+     , coalesce(clicks, 0) clicks
+     , coalesce(total_spend, 0) total_spend
+     , coalesce(typeforms, 0) typeforms
+     , coalesce(mqls, 0) mqls
+     , coalesce(sqls, 0) sqls
+     , coalesce(bgs, 0) bgs
+     , typeforms::float/ clicks typeform_from_clicks_rate
+     , mqls::float  / typeforms  mql_from_typeform_rate
+     , sqls::float / mqls  sql_from_mql_rate
+     , bgs::float / sqls   bg_enrolled_from_mql_rate
+     , bgs::float / typeforms funnel_conversion_rate
+from total_spends
+left join students_dates
+using (campaign_id,ad_id ,date_of_reference)
