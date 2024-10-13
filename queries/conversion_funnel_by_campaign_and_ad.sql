@@ -60,11 +60,11 @@ select platform
      , coalesce(mqls, 0) mqls
      , coalesce(sqls, 0) sqls
      , coalesce(bgs, 0) bgs
-     , typeforms::float/ clicks typeform_from_clicks_rate
-     , mqls::float  / typeforms  mql_from_typeform_rate
-     , sqls::float / mqls  sql_from_mql_rate
-     , bgs::float / sqls   bg_enrolled_from_mql_rate
-     , bgs::float / typeforms funnel_conversion_rate
+     , case when clicks = 0 then 0 else typeforms::float/ clicks end typeform_from_clicks_rate
+     , case when typeforms = 0 then 0 else mqls::float  / typeforms  end mql_from_typeform_rate
+     , case when mqls = 0 then 0 else sqls::float / mqls  end sql_from_mql_rate
+     , case when sqls = 0 then 0 else bgs::float / sqls   end bg_enrolled_from_mql_rate
+     , case when typeforms =0 then 0 else bgs::float / typeforms end funnel_conversion_rate
 from total_spends
 left join students_dates
 using (campaign_id,ad_id ,date_of_reference)
