@@ -9,3 +9,4 @@ psycopg2
 streamlit-plotly-events==0.0.6
 numpy~=2.1.0
 scikit-learn~=1.5.1
+pygwalker~=0.4.9.10
